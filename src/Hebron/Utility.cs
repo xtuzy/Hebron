@@ -7,7 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Type = ClangSharp.Type;
-
+using CX_BinaryOperatorKind = ClangSharp.Interop.CXBinaryOperatorKind;
+using CX_UnaryOperatorKind = ClangSharp.Interop.CXUnaryOperatorKind;
 namespace Hebron
 {
 	public enum PrimitiveType
@@ -181,7 +182,7 @@ namespace Hebron
 		public override string ToString() => TypeString;
 	}
 
-	internal static class Utility
+	public static class Utility
 	{
 		public static unsafe TranslationUnit Compile(string inputPath, string[] defines, string[] additionalIncludeFolders)
 		{
@@ -208,7 +209,7 @@ namespace Hebron
 				arr.Add(d);
 			}
 
-			var index = Index.Create();
+			var index = ClangSharp.Index.Create();
 
 			CXTranslationUnit cxTranslationUnit;
 			var res = CXTranslationUnit.TryParse(index.Handle,
@@ -296,12 +297,12 @@ namespace Hebron
 			if (cursor.kind == CXCursorKind.CXCursor_BinaryOperator ||
 				cursor.kind == CXCursorKind.CXCursor_CompoundAssignOperator)
 			{
-				return clangsharp.Cursor_getBinaryOpcodeSpelling(clangsharp.Cursor_getBinaryOpcode(cursor)).CString;
+				return cursor.BinaryOperatorKindSpelling.CString;// clangsharp.Cursor_getBinaryOpcodeSpelling(clangsharp.Cursor_getBinaryOpcode(cursor)).CString;
 			}
 
 			if (cursor.kind == CXCursorKind.CXCursor_UnaryOperator)
 			{
-				return clangsharp.Cursor_getUnaryOpcodeSpelling(clangsharp.Cursor_getUnaryOpcode(cursor)).CString;
+				return cursor.UnaryOperatorKindSpelling.CString;// clangsharp.Cursor_getUnaryOpcodeSpelling(clangsharp.Cursor_getUnaryOpcode(cursor)).CString;
 			}
 
 			return string.Empty;
@@ -453,53 +454,53 @@ namespace Hebron
 
 		public static bool IsLogicalBooleanOperator(this CX_BinaryOperatorKind op)
 		{
-			return op == CX_BinaryOperatorKind.CX_BO_LAnd || op == CX_BinaryOperatorKind.CX_BO_LOr ||
-				op == CX_BinaryOperatorKind.CX_BO_EQ || op == CX_BinaryOperatorKind.CX_BO_GE ||
-				op == CX_BinaryOperatorKind.CX_BO_GE || op == CX_BinaryOperatorKind.CX_BO_LE ||
-				op == CX_BinaryOperatorKind.CX_BO_GT || op == CX_BinaryOperatorKind.CX_BO_LT;
+			return op == CX_BinaryOperatorKind.CXBinaryOperator_LAnd || op == CX_BinaryOperatorKind.CXBinaryOperator_LOr ||
+				op == CX_BinaryOperatorKind.CXBinaryOperator_EQ || op == CX_BinaryOperatorKind.CXBinaryOperator_GE ||
+				op == CX_BinaryOperatorKind.CXBinaryOperator_GE || op == CX_BinaryOperatorKind.CXBinaryOperator_LE ||
+				op == CX_BinaryOperatorKind.CXBinaryOperator_GT || op == CX_BinaryOperatorKind.CXBinaryOperator_LT;
 		}
 
 		public static bool IsLogicalBinaryOperator(this CX_BinaryOperatorKind op)
 		{
-			return op == CX_BinaryOperatorKind.CX_BO_LAnd || op == CX_BinaryOperatorKind.CX_BO_LOr;
+			return op == CX_BinaryOperatorKind.CXBinaryOperator_LAnd || op == CX_BinaryOperatorKind.CXBinaryOperator_LOr;
 		}
 
 		public static bool IsBinaryOperator(this CX_BinaryOperatorKind op)
 		{
-			return op == CX_BinaryOperatorKind.CX_BO_And || op == CX_BinaryOperatorKind.CX_BO_Or;
+			return op == CX_BinaryOperatorKind.CXBinaryOperator_And || op == CX_BinaryOperatorKind.CXBinaryOperator_Or;
 		}
 
 		public static bool IsAssign(this CX_BinaryOperatorKind op)
 		{
-			return op == CX_BinaryOperatorKind.CX_BO_AddAssign || op == CX_BinaryOperatorKind.CX_BO_AndAssign ||
-				   op == CX_BinaryOperatorKind.CX_BO_Assign || op == CX_BinaryOperatorKind.CX_BO_DivAssign ||
-				   op == CX_BinaryOperatorKind.CX_BO_MulAssign || op == CX_BinaryOperatorKind.CX_BO_OrAssign ||
-				   op == CX_BinaryOperatorKind.CX_BO_RemAssign || op == CX_BinaryOperatorKind.CX_BO_ShlAssign ||
-				   op == CX_BinaryOperatorKind.CX_BO_ShrAssign || op == CX_BinaryOperatorKind.CX_BO_SubAssign ||
-				   op == CX_BinaryOperatorKind.CX_BO_XorAssign;
+			return op == CX_BinaryOperatorKind.CXBinaryOperator_AddAssign || op == CX_BinaryOperatorKind.CXBinaryOperator_AndAssign ||
+				   op == CX_BinaryOperatorKind.CXBinaryOperator_Assign || op == CX_BinaryOperatorKind.CXBinaryOperator_DivAssign ||
+				   op == CX_BinaryOperatorKind.CXBinaryOperator_MulAssign || op == CX_BinaryOperatorKind.CXBinaryOperator_OrAssign ||
+				   op == CX_BinaryOperatorKind.CXBinaryOperator_RemAssign || op == CX_BinaryOperatorKind.CXBinaryOperator_ShlAssign ||
+				   op == CX_BinaryOperatorKind.CXBinaryOperator_ShrAssign || op == CX_BinaryOperatorKind.CXBinaryOperator_SubAssign ||
+				   op == CX_BinaryOperatorKind.CXBinaryOperator_XorAssign;
 		}
 
 		public static bool IsBooleanOperator(this CX_BinaryOperatorKind op)
 		{
-			return op == CX_BinaryOperatorKind.CX_BO_LAnd || op == CX_BinaryOperatorKind.CX_BO_LOr ||
-				   op == CX_BinaryOperatorKind.CX_BO_EQ || op == CX_BinaryOperatorKind.CX_BO_NE ||
-				   op == CX_BinaryOperatorKind.CX_BO_GE || op == CX_BinaryOperatorKind.CX_BO_LE ||
-				   op == CX_BinaryOperatorKind.CX_BO_GT || op == CX_BinaryOperatorKind.CX_BO_LT ||
-				   op == CX_BinaryOperatorKind.CX_BO_And || op == CX_BinaryOperatorKind.CX_BO_Or;
+			return op == CX_BinaryOperatorKind.CXBinaryOperator_LAnd || op == CX_BinaryOperatorKind.CXBinaryOperator_LOr ||
+				   op == CX_BinaryOperatorKind.CXBinaryOperator_EQ || op == CX_BinaryOperatorKind.CXBinaryOperator_NE ||
+				   op == CX_BinaryOperatorKind.CXBinaryOperator_GE || op == CX_BinaryOperatorKind.CXBinaryOperator_LE ||
+				   op == CX_BinaryOperatorKind.CXBinaryOperator_GT || op == CX_BinaryOperatorKind.CXBinaryOperator_LT ||
+				   op == CX_BinaryOperatorKind.CXBinaryOperator_And || op == CX_BinaryOperatorKind.CXBinaryOperator_Or;
 		}
 
 		public static bool IsUnaryOperatorPre(this CX_UnaryOperatorKind type)
 		{
 			switch (type)
 			{
-				case CX_UnaryOperatorKind.CX_UO_PreInc:
-				case CX_UnaryOperatorKind.CX_UO_PreDec:
-				case CX_UnaryOperatorKind.CX_UO_Plus:
-				case CX_UnaryOperatorKind.CX_UO_Minus:
-				case CX_UnaryOperatorKind.CX_UO_Not:
-				case CX_UnaryOperatorKind.CX_UO_LNot:
-				case CX_UnaryOperatorKind.CX_UO_AddrOf:
-				case CX_UnaryOperatorKind.CX_UO_Deref:
+				case CX_UnaryOperatorKind.CXUnaryOperator_PreInc:
+				case CX_UnaryOperatorKind.CXUnaryOperator_PreDec:
+				case CX_UnaryOperatorKind.CXUnaryOperator_Plus:
+				case CX_UnaryOperatorKind.CXUnaryOperator_Minus:
+				case CX_UnaryOperatorKind.CXUnaryOperator_Not:
+				case CX_UnaryOperatorKind.CXUnaryOperator_LNot:
+				case CX_UnaryOperatorKind.CXUnaryOperator_AddrOf:
+				case CX_UnaryOperatorKind.CXUnaryOperator_Deref:
 					return true;
 			}
 
@@ -517,8 +518,11 @@ namespace Hebron
 			var tokens = cursor.TranslationUnit.Tokenize(cursor.SourceRange);
 
 			Debug.Assert(tokens.Length == 1);
-			Debug.Assert(tokens[0].Kind == CXTokenKind.CXToken_Literal);
+            if (!tokens.IsEmpty)
+                Debug.Assert(tokens[0].Kind == CXTokenKind.CXToken_Literal);
 
+			if (tokens.IsEmpty)
+				return "0";
 			var spelling = tokens[0].GetSpelling(cursor.TranslationUnit).ToString();
 			spelling = spelling.Trim('\\', '\r', '\n');
 			return spelling;
@@ -720,7 +724,10 @@ namespace Hebron
 			return expr;
 		}
 
-		private static readonly HashSet<string> NativeFunctions = new HashSet<string>
+		/// <summary>
+		/// 修改为public，如果之后对除这些之外的函数也可以替换，则可从外部添加
+		/// </summary>
+		public static readonly HashSet<string> NativeFunctions = new HashSet<string>
 		{
 			"malloc",
 			"free",

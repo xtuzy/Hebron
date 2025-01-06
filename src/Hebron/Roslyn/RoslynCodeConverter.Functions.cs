@@ -294,10 +294,10 @@ namespace Hebron.Roslyn
 			if (info.CursorKind == CXCursorKind.CXCursor_UnaryOperator)
 			{
 				var child = ProcessChildByIndex(info, 0);
-				var type = clangsharp.Cursor_getUnaryOpcode(info.Handle);
+				var type = info.Handle.UnaryOperatorKind;//clangsharp.Cursor_getUnaryOpcode(info.Handle);
 				if (child.IsPointer)
 				{
-					if (type == CX_UnaryOperatorKind.CX_UO_LNot)
+					if (type == CXUnaryOperatorKind.CXUnaryOperator_LNot)
 					{
 						crp.Expression = child.Expression + "== null";
 					}
@@ -318,7 +318,7 @@ namespace Hebron.Roslyn
 					}
 				}
 
-				if (type == CX_UnaryOperatorKind.CX_UO_LNot)
+				if (type == CXUnaryOperatorKind.CXUnaryOperator_LNot)
 				{
 					var sub = ProcessChildByIndex(crp.Info, 0);
 					crp.Expression = sub.Expression + "== 0";
@@ -389,11 +389,11 @@ namespace Hebron.Roslyn
 
 				case CXCursorKind.CXCursor_UnaryExpr:
 					{
-						var opCode = clangsharp.Cursor_getUnaryOpcode(info.Handle);
+						var opCode = info.Handle.UnaryOperatorKind;//clangsharp.Cursor_getUnaryOpcode(info.Handle);
 						var expr = ProcessPossibleChildByIndex(info, 0);
 
 						string[] tokens = null;
-						if (opCode == CX_UnaryOperatorKind.CX_UO_Invalid && expr != null)
+						if (opCode == CXUnaryOperatorKind.CXUnaryOperator_Invalid && expr != null)
 						{
 							tokens = info.Tokenize();
 							var op = "sizeof";
@@ -461,7 +461,7 @@ namespace Hebron.Roslyn
 							b.Expression = b.Expression.Parentize();
 						}
 
-						if (type.IsAssign() && type != CX_BinaryOperatorKind.CX_BO_ShlAssign && type != CX_BinaryOperatorKind.CX_BO_ShrAssign)
+						if (type.IsAssign() && type != CXBinaryOperatorKind.CXBinaryOperator_ShlAssign && type != CXBinaryOperatorKind.CXBinaryOperator_ShrAssign)
 						{
 							var typeInfo = info.ToTypeInfo();
 
@@ -498,13 +498,13 @@ namespace Hebron.Roslyn
 							{
 								switch (type)
 								{
-									case CX_BinaryOperatorKind.CX_BO_Add:
+									case CXBinaryOperatorKind.CXBinaryOperator_Add:
 										return a.Expression + "[" + b.Expression + "]";
 								}
 							}
 						}
 
-						if (a.IsPointer && (type == CX_BinaryOperatorKind.CX_BO_Assign || type.IsBooleanOperator()) &&
+						if (a.IsPointer && (type == CXBinaryOperatorKind.CXBinaryOperator_Assign || type.IsBooleanOperator()) &&
 							(b.Expression.Deparentize() == "0"))
 						{
 							b.Expression = "null";
@@ -519,13 +519,13 @@ namespace Hebron.Roslyn
 					{
 						var a = ProcessChildByIndex(info, 0);
 
-						var type = clangsharp.Cursor_getUnaryOpcode(info.Handle);
+						var type = info.Handle.UnaryOperatorKind; //clangsharp.Cursor_getUnaryOpcode(info.Handle);
 						var str = info.GetOperatorString();
 
 						var typeInfo = info.ToTypeInfo();
 
 						if (IsClass(typeInfo) && 
-							(type == CX_UnaryOperatorKind.CX_UO_AddrOf || type == CX_UnaryOperatorKind.CX_UO_Deref))
+							(type == CXUnaryOperatorKind.CXUnaryOperator_AddrOf || type == CXUnaryOperatorKind.CXUnaryOperator_Deref))
 						{
 							str = string.Empty;
 						}
@@ -767,7 +767,7 @@ namespace Hebron.Roslyn
 							{
 								var op = clangsharp.Cursor_getBinaryOpcode(condition.Info.Handle);
 
-								if (op == CX_BinaryOperatorKind.CX_BO_Or || op == CX_BinaryOperatorKind.CX_BO_And)
+								if (op == CXBinaryOperatorKind.CXBinaryOperator_Or || op == CXBinaryOperatorKind.CXBinaryOperator_And)
 								{
 								}
 								else
@@ -1027,7 +1027,7 @@ namespace Hebron.Roslyn
 			if (info != null && info.Info.CursorKind == CXCursorKind.CXCursor_BinaryOperator)
 			{
 				var type = clangsharp.Cursor_getBinaryOpcode(info.Info.Handle);
-				if (type == CX_BinaryOperatorKind.CX_BO_Comma)
+				if (type == CXBinaryOperatorKind.CXBinaryOperator_Comma)
 				{
 					var a = ReplaceCommas(ProcessChildByIndex(info.Info, 0));
 					var b = ReplaceCommas(ProcessChildByIndex(info.Info, 1));

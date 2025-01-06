@@ -78,7 +78,11 @@ namespace Hebron.Roslyn
 						if (child.CursorChildren.Count > 0)
 						{
 							int value = 0;
-							var str = child.CursorChildren[0].GetLiteralString();
+							string str = string.Empty;
+							if((child as EnumConstantDecl).InitExpr != null)
+								str = (child as EnumConstantDecl).InitVal.ToString();//如enum jsmnerr { JSMN_ERROR_NOMEM = -1 };
+                            else
+								str = child.CursorChildren[0].GetLiteralString();
 							if (!string.IsNullOrEmpty(str))
 							{
 								if (str.StartsWith("0x"))

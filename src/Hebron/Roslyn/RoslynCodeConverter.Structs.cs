@@ -258,7 +258,7 @@ namespace Hebron.Roslyn
 					Classes.Add(name);
 				}
 			}
-
+			Classes.Clear();////
 			// Third run - generate actual code
 			foreach (var cursor in TranslationUnit.EnumerateCursors())
 			{
