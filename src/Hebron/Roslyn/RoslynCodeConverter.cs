@@ -26,7 +26,7 @@ namespace Hebron.Roslyn
 		private RoslynCodeConverter(RoslynConversionParameters parameters)
 		{
 			Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
-			TranslationUnit = Utility.Compile(parameters.InputPath, parameters.Defines, parameters.AdditionalIncludeDirectories);
+			TranslationUnit = Utility.Compile(parameters.InputPath, parameters.Defines, parameters.AdditionalIncludeDirectories, parameters.Args);
 			Result = new RoslynConversionResult();
 
 			foreach (var cls in parameters.Classes)

@@ -184,7 +184,7 @@ namespace Hebron
 
 	public static class Utility
 	{
-		public static unsafe TranslationUnit Compile(string inputPath, string[] defines, string[] additionalIncludeFolders)
+		public static unsafe TranslationUnit Compile(string inputPath, string[] defines, string[] additionalIncludeFolders, string[] args = null)
 		{
 			if (string.IsNullOrEmpty(inputPath))
 			{
@@ -198,7 +198,12 @@ namespace Hebron
 
 			var arr = new List<string>();
 
-			foreach (var d in defines)
+			if(args != null)
+            {
+                arr.AddRange(args);
+            }
+
+            foreach (var d in defines)
 			{
 				arr.Add("-D" + d);
 			}

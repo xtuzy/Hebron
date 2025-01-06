@@ -10,7 +10,8 @@
 	{
 		public UnsafeArrayUsage GlobalVariablesUnsafeArrayUsage;
 
-		public string[] Classes { get; set; }
+		public string[] Args { get; set; }
+        public string[] Classes { get; set; }
 
 		public RoslynConversionParameters()
 		{
