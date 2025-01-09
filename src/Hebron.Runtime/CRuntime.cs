@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace Hebron.Runtime
 {
@@ -70,7 +71,7 @@ namespace Hebron.Runtime
 
         public static int memcmp(void* a, sbyte[] b, ulong size)
         {
-            fixed(void* bptr = b)
+            fixed (void* bptr = b)
             {
                 return memcmp(a, bptr, size);
             }
@@ -337,12 +338,12 @@ namespace Hebron.Runtime
         {
             return float.Parse(str);
         }
-        
+
         public static float atof(ReadOnlySpan<byte> nptr)
         {
             return float.Parse(nptr);
         }
-        
+
         public static float atof(sbyte* nptr)
         {
             var sp = new ReadOnlySpan<byte>(nptr, (int)strlen(nptr));
@@ -369,7 +370,7 @@ namespace Hebron.Runtime
 
         static sbyte* strchr(sbyte[] s, int ch)
         {
-            fixed(sbyte* p = s)
+            fixed (sbyte* p = s)
             {
                 return strchr(p, ch);
             }
@@ -422,7 +423,7 @@ namespace Hebron.Runtime
         {
             sbyte* save = to;
 
-            for (; (*to = *from) != (sbyte)'\0'; ++from, ++to);
+            for (; (*to = *from) != (sbyte)'\0'; ++from, ++to) ;
             return (save);
         }
 
@@ -466,6 +467,153 @@ namespace Hebron.Runtime
         public static void assert(int value)
         {
             Debug.Assert(value != 0);
+        }
+
+        /// <summary>
+        /// format为 "%.*g"时
+        /// </summary>
+        /// <param name="cursor"></param>
+        /// <param name="size"></param>
+        /// <param name="format"></param>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static ulong snprintf(sbyte* cursor, ulong size, sbyte* format, int arg1, double arg2)
+        {
+            string formatStr = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(format, (int)strlen(format))));
+            if (!formatStr.Contains("%.*g"))
+                throw new ArgumentException($"format {formatStr} don't contains %.*g");
+            return snprintf(cursor, size, formatStr.Replace("%.*g", $"{{0:G{arg1}}}"), arg2);
+        }
+
+        /// <summary>
+        /// format为 "%d"时
+        /// </summary>
+        /// <param name="cursor"></param>
+        /// <param name="size"></param>
+        /// <param name="format"></param>
+        /// <param name="arg1"></param>
+        /// <returns></returns>
+        public static ulong snprintf(sbyte* cursor, ulong size, sbyte* format, int arg1)
+        {
+            string formatStr = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(format, (int)strlen(format))));
+            formatStr = formatStr.Replace("%d", "{0}");
+
+            return snprintf(cursor, size, formatStr, arg1);
+        }
+
+        /// <summary>
+        /// format为 "%s %zu"时
+        /// </summary>
+        /// <param name="cursor"></param>
+        /// <param name="size"></param>
+        /// <param name="format"></param>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        /// <returns></returns>
+        public static ulong snprintf(sbyte* cursor, ulong size, sbyte* format, sbyte* arg1, ulong arg2)
+        {
+            string formatStr = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(format, (int)strlen(format))));
+            formatStr = formatStr.Replace("%s", "{0}");
+            formatStr = formatStr.Replace("%zu", "{1}");
+            string arg1Str = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(arg1, (int)strlen(arg1))));
+
+            return snprintf(cursor, size, formatStr, arg1Str, arg2);
+        }
+
+        public static ulong snprintf(sbyte* cursor, ulong size, sbyte* format, sbyte* arg1, int arg2)
+        {
+            string formatStr = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(format, (int)strlen(format))));
+            formatStr = formatStr.Replace("%s", "{0}");
+            formatStr = formatStr.Replace("%d", "{1}");
+            string arg1Str = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(arg1, (int)strlen(arg1))));
+
+            return snprintf(cursor, size, formatStr, arg1Str, arg2);
+        }
+
+        public static ulong snprintf(sbyte* cursor, ulong size, sbyte* format, sbyte* arg1)
+        {
+            string formatStr = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(format, (int)strlen(format))));
+            formatStr = formatStr.Replace("%s", "{0}");
+            string arg1Str = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(arg1, (int)strlen(arg1))));
+            return snprintf(cursor, size, formatStr, arg1Str);
+        }
+        
+        public static ulong snprintf(sbyte* cursor, ulong size, sbyte* format)
+        {
+            string formatStr = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(format, (int)strlen(format))));
+            if(formatStr.Contains("%"))
+            {
+                throw new ArgumentException($"format {formatStr} constains %");
+            }
+            return snprintf(cursor, size, formatStr);
+        }
+
+        /// <summary>
+        /// format为 "%s %s"时，arg1和arg2为字符串
+        /// </summary>
+        /// <param name="cursor"></param>
+        /// <param name="size"></param>
+        /// <param name="format"></param>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        /// <returns></returns>
+        public static ulong snprintf(sbyte* cursor, ulong size, sbyte* format, sbyte* arg1, sbyte* arg2)
+        {
+            string formatStr = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(format, (int)strlen(format))));
+            string arg1Str = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(arg1, (int)strlen(arg1))));
+            string arg2Str = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(arg2, (int)strlen(arg2))));
+            var r = new Regex("%s");
+            formatStr = r.Replace(formatStr, "{0}", 1);
+            formatStr = r.Replace(formatStr, "{1}", 1);
+            return snprintf(cursor, size, formatStr, arg1Str, arg2Str);
+        }
+
+        /// <summary>
+        /// format为 "%.*s"时，arg1为截取字符串长度，arg2为字符串
+        /// </summary>
+        /// <param name="cursor"></param>
+        /// <param name="size"></param>
+        /// <param name="format"></param>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        /// <returns></returns>
+        public static ulong snprintf(sbyte* cursor, ulong size, sbyte* format, int arg1, sbyte* arg2)
+        {
+            string formatStr = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(format, (int)strlen(format))));
+            string arg2Str = System.Text.Encoding.UTF8.GetString(MemoryMarshal.Cast<sbyte, byte>(new ReadOnlySpan<sbyte>(arg2, (int)strlen(arg2))));
+            if(formatStr.Contains("%.*s"))
+            {
+                return snprintf(cursor, size, formatStr.Replace("%.*s", "{0}"), arg2Str.Substring(0, Math.Min(arg1, arg2Str.Length)));
+            }
+            throw new ArgumentException($"format {formatStr} don't constains %.*s");
+        }
+
+        static ulong snprintf(sbyte* cursor, ulong size, string format, object? arg1 = null, object? arg2 = null)
+        {
+            string result = string.Format(format, arg1, arg2);
+            return snprintf(cursor, size, result);
+        }
+
+        /// <summary>
+        /// 如果cursor为NULL，返回格式化字符串长度（不包括结尾的 '\0' 字符）
+        /// </summary>
+        /// <param name="cursor"></param>
+        /// <param name="size"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        static ulong snprintf(sbyte* cursor, ulong size, string result)
+        {
+            var array = System.Text.Encoding.UTF8.GetBytes(result);
+            if (cursor == null)
+                return (ulong)array.Length;
+            var copyCount = array.Length > (long)size ? (long)size : array.Length;
+            fixed (byte* p = array)
+            {
+                memcpy(cursor, p, copyCount);
+            }
+            return (ulong)copyCount;
         }
     }
 }
